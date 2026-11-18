@@ -1,0 +1,138 @@
+<div class="product-overlay" (click)="close()">
+  <section class="product-modal" [attr.aria-label]="t('Информация о товаре: ') + productName()" aria-modal="true" role="dialog" (click)="$event.stopPropagation()">
+    <button class="product-close-button" type="button" [attr.aria-label]="t('Закрыть карточку товара')" (click)="close()">
+      <span></span><span></span>
+    </button>
+    <div class="product-detail-main">
+      <div class="product-detail-visual">
+        <button class="back-to-catalog" type="button" (click)="close()">
+          <span>←</span> {{ t('Вернуться в каталог') }}
+        </button>
+        <div class="product-detail-image">
+          <img [src]="product().imageUrl" [alt]="productName()" />
+          @if (product().tags.length > 0) {
+            <span class="product-badge" [class.badge-dark]="product().tags.includes('Хит')">
+              {{ t(product().tags[0]) }}
+            </span>
+          }
+        </div>
+      </div>
+      <div class="product-detail-summary">
+        <p class="eyebrow product-detail-category">{{ productCategory() }}</p>
+        <h2>{{ productName() }}</h2>
+        <div class="product-rating" [attr.aria-label]="t('Средний рейтинг товара')">
+          <span class="rating-stars" aria-hidden="true">
+            @for (star of stars; track star) {
+              <span [class.filled]="star <= roundedRating(product().ratingAverage)">★</span>
+            }
+          </span>
+          <span>{{ (product().ratingAverage ?? 0) | number:'1.1-1' }} · {{ reviewCountLabel(product().reviewCount ?? 0) }}</span>
+        </div>
+        <p class="product-detail-price">{{ formatPrice(product().price) }}</p>
+        @if (isAdmin()) {
+          <button class="admin-edit-product-button" type="button" (click)="editProduct.emit(product())">
+            {{ t('Редактировать товар') }}
+          </button>
+        }
+        <button class="product-add-button" type="button" (click)="addToCart.emit(product())">
+          {{ t('Добавить в корзину') }} <span>＋</span>
+        </button>
+      </div>
+    </div>
+    <div class="product-detail-extras">
+      <p class="product-detail-description">{{ productDescription() }}</p>
+      <div class="specifications">
+        <h3>{{ t('Характеристики') }}</h3>
+        <dl>
+          @for (specification of getSpecifications(product()); track specification.key) {
+            <div class="specification-row">
+              <dt>{{ specification.key }}</dt>
+              <dd>{{ specification.value }}</dd>
+            </div>
+          }
+          <div class="specification-row">
+            <dt>{{ t('Категория') }}</dt>
+            <dd>{{ productCategory() }}</dd>
+          </div>
+        </dl>
+      </div>
+      <section class="reviews-section" aria-labelledby="reviews-title">
+        <div class="reviews-heading">
+          <div>
+            <p class="eyebrow">{{ t('Впечатления покупателей') }}</p>
+            <h3 id="reviews-title">{{ t('Отзывы') }}</h3>
+          </div>
+          <span class="review-count">{{ reviews().length }}</span>
+        </div>
+        @if (reviewsLoading()) {
+          <p class="review-empty">{{ t('Загружаем отзывы…') }}</p>
+        } @else if (reviews().length === 0) {
+          <p class="review-empty">{{ t('Пока нет отзывов. Будьте первым, кто поделится впечатлением.') }}</p>
+        } @else {
+          <div class="review-list">
+            @for (review of reviews(); track review.id) {
+              <article class="review-item">
+                <div class="review-item-heading">
+                  <strong>{{ review.reviewerName }}</strong>
+                  <time [attr.datetime]="review.createdAtUtc">{{ formatReviewDate(review.createdAtUtc) }}</time>
+                </div>
+                <span class="rating-stars review-stars" [attr.aria-label]="t('Оценка: ') + review.rating + t(' из 5')">
+                  @for (star of stars; track star) {
+                    <span [class.filled]="star <= review.rating">★</span>
+                  }
+                </span>
+                @if (review.comment) {
+                  <p>{{ review.comment }}</p>
+                }
+                <app-review-moderation-actions
+                  [isAdmin]="isAdmin()"
+                  [isOwnReview]="review.isOwnReview"
+                  [busy]="moderationBusy()"
+                  (reportRequested)="reportReview.emit(review)"
+                  (hideRequested)="hideReview.emit(review)"
+                ></app-review-moderation-actions>
+              </article>
+            }
+          </div>
+        }
+        @if (isAuthenticated()) {
+          <form class="review-form" (submit)="submitReview($event)">
+            <h4>{{ t('Оставить отзыв') }}</h4>
+            <span class="review-form-label">{{ t('Ваша оценка') }}</span>
+            <div class="rating-picker" role="group" [attr.aria-label]="t('Оценка от 1 до 5')">
+              @for (star of stars; track star) {
+                <button
+                  type="button"
+                  [class.filled]="star <= reviewRating()"
+                  [attr.aria-label]="star + t(' из 5')"
+                  [attr.aria-pressed]="star === reviewRating()"
+                  (click)="ratingChanged.emit(star)"
+                >★</button>
+              }
+            </div>
+            <label for="review-comment">{{ t('Комментарий') }}</label>
+            <textarea
+              id="review-comment"
+              rows="4"
+              maxlength="2000"
+              [placeholder]="t('Что вам понравилось?')"
+              [value]="reviewComment()"
+              (input)="onCommentInput($event)"
+            ></textarea>
+            <button class="product-add-button" type="submit" [disabled]="reviewBusy()">
+              {{ t(reviewBusy() ? 'Сохраняем…' : 'Опубликовать отзыв') }} <span>→</span>
+            </button>
+            <p class="review-form-note">{{ t('Повторная отправка обновит ваш отзыв для этого товара.') }}</p>
+          </form>
+        } @else {
+          <button class="review-login-button" type="button" (click)="accountRequested.emit()">
+            {{ t('Войдите, чтобы оставить отзыв') }}
+          </button>
+        }
+        @if (reviewMessage()) {
+          <p class="review-message" role="alert">{{ t(reviewMessage()) }}</p>
+        }
+      </section>
+    </div>
+  </section>
+</div>

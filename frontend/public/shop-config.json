@@ -1,0 +1,7 @@
+{
+  "productApiUrl": "http://localhost:5275/api/Product",
+  "identityApiUrl": "http://localhost:5127/api/identity",
+  "cartApiUrl": "http://localhost:5173/api/Cart",
+  "orderApiUrl": "http://localhost:5126/api/Order",
+  "supportApiUrl": "http://localhost:5126/api/support"
+}

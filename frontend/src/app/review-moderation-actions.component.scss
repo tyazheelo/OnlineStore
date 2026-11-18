@@ -1,0 +1,26 @@
+.review-actions {
+  display: flex;
+  gap: 12px;
+  margin-top: 9px;
+}
+
+.review-action-button {
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: #84251d;
+  cursor: pointer;
+  font: inherit;
+  font-size: 14px;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.review-action-button:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.review-hide-button {
+  color: #445b49;
+}

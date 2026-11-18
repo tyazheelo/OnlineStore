@@ -1,0 +1,326 @@
+<main class="account-page">
+  <button class="account-back-link" type="button" (click)="goToStore()">← {{ t('Вернуться в магазин') }}</button>
+
+  <header class="account-page-heading">
+    <p class="eyebrow">{{ t('Личный кабинет') }}</p>
+    <h1>{{ t('Мой аккаунт') }}</h1>
+    <p>{{ t('Ваши личные данные и настройки профиля.') }}</p>
+  </header>
+
+  @if (loading()) {
+    <section class="account-profile-card" aria-live="polite">{{ t('Загружаем данные профиля…') }}</section>
+  } @else if (errorMessage() && !profile()) {
+    <section class="account-profile-card account-page-message" role="status">
+      <p>{{ errorMessage() }}</p>
+      <button class="account-secondary-button" type="button" (click)="goToStore()">{{ t('Вернуться в магазин') }}</button>
+    </section>
+  } @else if (profile(); as user) {
+    <section class="account-profile-card">
+      <div class="account-profile-heading">
+        <div>
+          <p class="eyebrow">{{ t('Данные пользователя') }}</p>
+          <h2>{{ user.firstName }} {{ user.lastName }}</h2>
+        </div>
+        <span class="account-role-badge">{{ t(isAdmin() ? 'Администратор' : 'Покупатель') }}</span>
+      </div>
+
+      <div class="account-readonly-fields">
+        <div>
+          <span>{{ t('Электронная почта') }}</span>
+          <strong>{{ user.email }}</strong>
+        </div>
+        <div>
+          <span>{{ t('Имя пользователя') }}</span>
+          <strong>{{ user.userName }}</strong>
+        </div>
+      </div>
+
+      @if (editing()) {
+        <form class="account-profile-form" (submit)="saveProfile($event)">
+          <label for="profile-first-name">{{ t('Имя') }}</label>
+          <input
+            id="profile-first-name"
+            type="text"
+            required
+            maxlength="100"
+            [value]="firstName()"
+            (input)="onTextInput($event, 'firstName')"
+          />
+          <label for="profile-last-name">{{ t('Фамилия') }}</label>
+          <input
+            id="profile-last-name"
+            type="text"
+            required
+            maxlength="100"
+            [value]="lastName()"
+            (input)="onTextInput($event, 'lastName')"
+          />
+          <label for="profile-user-name">{{ t('Имя пользователя') }}</label>
+          <input
+            id="profile-user-name"
+            type="text"
+            required
+            minlength="3"
+            maxlength="256"
+            pattern="[A-Za-z0-9._+\-]+"
+            autocomplete="username"
+            [value]="userName()"
+            (input)="onTextInput($event, 'userName')"
+          />
+          <p class="account-field-hint">{{ t('Латинские буквы, цифры и символы . _ + -') }}</p>
+          <label for="profile-phone">{{ t('Телефон') }}</label>
+          <input
+            id="profile-phone"
+            type="tel"
+            maxlength="32"
+            [value]="phoneNumber()"
+            (input)="onTextInput($event, 'phoneNumber')"
+          />
+          <div class="account-profile-actions">
+            <button class="account-primary-button" type="submit" [disabled]="saving()">
+              {{ t(saving() ? 'Сохраняем…' : 'Сохранить изменения') }}
+            </button>
+            <button class="account-secondary-button" type="button" [disabled]="saving()" (click)="cancelEditing()">
+              {{ t('Отмена') }}
+            </button>
+          </div>
+        </form>
+      } @else {
+        <div class="account-readonly-fields account-contact-fields">
+          <div>
+            <span>{{ t('Имя') }}</span>
+            <strong>{{ user.firstName }}</strong>
+          </div>
+          <div>
+            <span>{{ t('Фамилия') }}</span>
+            <strong>{{ user.lastName }}</strong>
+          </div>
+          <div>
+            <span>{{ t('Телефон') }}</span>
+            <strong>{{ user.phoneNumber || t('Не указан') }}</strong>
+          </div>
+        </div>
+        <button class="account-primary-button account-edit-button" type="button" (click)="editing.set(true)">
+          {{ t('Изменить данные') }}
+        </button>
+      }
+
+      @if (errorMessage()) {
+        <p class="account-feedback account-feedback-error" role="alert">{{ t(errorMessage()) }}</p>
+      }
+      @if (statusMessage()) {
+        <p class="account-feedback" role="status">{{ t(statusMessage()) }}</p>
+      }
+    </section>
+
+    @if (!isAdmin()) {
+      <section class="account-activity-section">
+        <div class="account-activity-heading">
+          <div>
+            <p class="eyebrow">{{ t('Покупки') }}</p>
+            <h2>{{ t('Мои заказы') }}</h2>
+          </div>
+        </div>
+        @if (ordersLoading()) {
+          <p class="account-activity-empty">{{ t('Загружаем заказы…') }}</p>
+        } @else if (orders().length === 0) {
+          <p class="account-activity-empty">{{ t('У вас пока нет заказов.') }}</p>
+        } @else {
+          <nav class="account-order-groups" [attr.aria-label]="t('Фильтр заказов')">
+            <button
+              type="button"
+              [class.selected]="selectedOrderGroup() === 'active'"
+              [attr.aria-pressed]="selectedOrderGroup() === 'active'"
+              (click)="selectOrderGroup('active')"
+            >{{ t('Активные') }} <span>{{ orderGroupCounts().active }}</span></button>
+            <button
+              type="button"
+              [class.selected]="selectedOrderGroup() === 'cancelled'"
+              [attr.aria-pressed]="selectedOrderGroup() === 'cancelled'"
+              (click)="selectOrderGroup('cancelled')"
+            >{{ t('Отменённые') }} <span>{{ orderGroupCounts().cancelled }}</span></button>
+            <button
+              type="button"
+              [class.selected]="selectedOrderGroup() === 'completed'"
+              [attr.aria-pressed]="selectedOrderGroup() === 'completed'"
+              (click)="selectOrderGroup('completed')"
+            >{{ t('Завершённые') }} <span>{{ orderGroupCounts().completed }}</span></button>
+          </nav>
+          @if (filteredOrders().length === 0) {
+            <p class="account-activity-empty">{{ t('В этой группе заказов пока нет.') }}</p>
+          } @else {
+          <div class="account-order-list">
+            @for (order of visibleOrders(); track order.id) {
+              <article class="account-order-card">
+                <div class="account-order-heading">
+                  <div>
+                    <button
+                      class="account-order-number"
+                      type="button"
+                      [attr.aria-expanded]="isOrderExpanded(order.id)"
+                      [attr.aria-controls]="'order-details-' + order.id"
+                      (click)="toggleOrder(order.id)"
+                    >{{ order.orderNumber }}</button>
+                    <span>{{ order.createdAt | date:'mediumDate' }}</span>
+                  </div>
+                  <span class="account-status-badge">{{ t(order.status) }}</span>
+                </div>
+                @if (isOrderExpanded(order.id)) {
+                  <div [id]="'order-details-' + order.id" class="account-order-details">
+                    <ul>
+                      @for (item of order.items; track item.productId) {
+                        <li>{{ item.productName }} × {{ item.quantity }} <span>{{ item.totalCost | number:'1.2-2' }} ₽</span></li>
+                      }
+                    </ul>
+                    <p class="account-order-address"><strong>{{ t('Адрес доставки') }}:</strong> {{ order.deliveryAddress }}</p>
+                    <p class="account-order-payment"><strong>{{ t('Способ оплаты') }}:</strong> {{ t(order.paymentType) }}</p>
+                    <div class="account-order-total">
+                      <span>{{ t('Стоимость товаров') }}</span>
+                      <strong>{{ order.subTotal | number:'1.2-2' }} ₽</strong>
+                    </div>
+                    <div class="account-order-total">
+                      <span>{{ t('Доставка') }}</span>
+                      <strong>{{ order.deliveryCost | number:'1.2-2' }} ₽</strong>
+                    </div>
+                    <div class="account-order-total">
+                      <span>{{ t('Итого по заказу') }}</span>
+                      <strong>{{ order.totalCost | number:'1.2-2' }} ₽</strong>
+                    </div>
+                  </div>
+                }
+              </article>
+            }
+          </div>
+          @if (orderPageCount() > 1) {
+            <nav class="account-pagination" [attr.aria-label]="t('Пагинация заказов')">
+              <button type="button" [disabled]="orderPage() === 1" (click)="changeOrderPage(-1)">
+                {{ t('Предыдущая') }}
+              </button>
+              <span>{{ t('Страница') }} {{ orderPage() }} {{ t('из') }} {{ orderPageCount() }}</span>
+              <button type="button" [disabled]="orderPage() === orderPageCount()" (click)="changeOrderPage(1)">
+                {{ t('Следующая') }}
+              </button>
+            </nav>
+          }
+          }
+        }
+      </section>
+
+      <section class="account-activity-section">
+        <div class="account-activity-heading">
+          <div>
+            <p class="eyebrow">{{ t('Помощь по заказу') }}</p>
+            <h2>{{ t('Поддержка') }}</h2>
+          </div>
+          <span class="account-activity-count">{{ tickets().length }}</span>
+        </div>
+
+        @if (supportError()) {
+          <p class="account-feedback account-feedback-error" role="alert">{{ t(supportError()) }}</p>
+        }
+        @if (supportMessage()) {
+          <p class="account-feedback" role="status">{{ t(supportMessage()) }}</p>
+        }
+
+        @if (orders().length > 0) {
+          <form class="account-support-form" (submit)="createSupportRequest($event)">
+            <label for="support-order">{{ t('Заказ') }}</label>
+            <select id="support-order" required [value]="supportOrderId()" (change)="onSupportOrderChange($event)">
+              <option value="">{{ t('Выберите заказ') }}</option>
+              @for (order of orders(); track order.id) {
+                <option [value]="order.id">{{ order.orderNumber }} · {{ t(order.status) }}</option>
+              }
+            </select>
+            <label for="support-message">{{ t('Опишите вопрос по заказу') }}</label>
+            <textarea
+              id="support-message"
+              required
+              minlength="2"
+              maxlength="2000"
+              rows="4"
+              [value]="supportDraft()"
+              (input)="onSupportDraftInput($event)"
+            ></textarea>
+            <button class="account-primary-button" type="submit" [disabled]="supportBusy()">
+              {{ t(supportBusy() ? 'Отправляем…' : 'Отправить обращение') }}
+            </button>
+          </form>
+        }
+
+        @if (supportLoading()) {
+          <p class="account-activity-empty">{{ t('Загружаем обращения…') }}</p>
+        } @else if (tickets().length === 0) {
+          <p class="account-activity-empty">{{ t('Обращений пока нет.') }}</p>
+        } @else {
+          <div class="account-ticket-list">
+            @for (ticket of tickets(); track ticket.id) {
+              <article class="account-ticket-card">
+                <header>
+                  <button
+                    class="account-ticket-toggle"
+                    type="button"
+                    [attr.aria-expanded]="isTicketExpanded(ticket.id)"
+                    [attr.aria-label]="t(isTicketExpanded(ticket.id) ? 'Свернуть обращение' : 'Развернуть обращение') + ' ' + ticket.orderNumber"
+                    [attr.aria-controls]="'ticket-dialog-' + ticket.id"
+                    (click)="toggleTicket(ticket.id)"
+                  >
+                    <strong>{{ ticket.orderNumber }}</strong>
+                    <span class="account-ticket-toggle-end">
+                      <span class="account-ticket-compact-status" [class.closed]="ticket.status === 'Resolved'">
+                        {{ t(ticket.status === 'Resolved' ? 'Resolved' : 'Open') }}
+                      </span>
+                      <svg
+                        class="account-ticket-chevron"
+                        [class.expanded]="isTicketExpanded(ticket.id)"
+                        viewBox="0 0 20 20"
+                        aria-hidden="true"
+                      >
+                        <path d="m5 7.5 5 5 5-5" />
+                      </svg>
+                    </span>
+                  </button>
+                </header>
+                @if (isTicketExpanded(ticket.id)) {
+                  <div [id]="'ticket-dialog-' + ticket.id" class="account-ticket-details">
+                    <div class="account-ticket-status">
+                      <span>{{ t(ticket.status === 'Resolved' ? 'Resolved' : ticket.status) }}</span>
+                      <time>{{ ticket.updatedAt | date:'mediumDate' }}</time>
+                    </div>
+                    <div class="account-ticket-messages">
+                      @for (message of ticket.messages; track message.id) {
+                        <div class="account-ticket-message" [class.account-ticket-message-admin]="message.isAdmin">
+                          <strong>{{ message.isAdmin ? t('Поддержка') : t('Вы') }}</strong>
+                          <p>{{ message.message }}</p>
+                          <time>{{ message.createdAt | date:'short' }}</time>
+                        </div>
+                      }
+                    </div>
+                    @if (ticket.status !== 'Resolved') {
+                      <form class="account-support-form account-reply-form" (submit)="replyToSupport(ticket, $event)">
+                        <label [for]="'reply-' + ticket.id">{{ t('Ваш ответ') }}</label>
+                        <textarea
+                          [id]="'reply-' + ticket.id"
+                          required
+                          minlength="2"
+                          maxlength="2000"
+                          rows="3"
+                          [value]="replyDrafts()[ticket.id] ?? ''"
+                          (input)="onReplyDraftInput(ticket.id, $event)"
+                        ></textarea>
+                        <button class="account-secondary-button" type="submit" [disabled]="replyingTo() !== ''">
+                          {{ t(replyingTo() === ticket.id ? 'Отправляем…' : 'Ответить') }}
+                        </button>
+                      </form>
+                    } @else {
+                      <p class="account-activity-empty">{{ t('Обращение закрыто.') }}</p>
+                    }
+                  </div>
+                }
+              </article>
+            }
+          </div>
+        }
+      </section>
+    }
+  }
+</main>

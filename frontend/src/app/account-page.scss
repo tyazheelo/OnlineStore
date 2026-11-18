@@ -1,0 +1,563 @@
+:host {
+  display: block;
+  min-height: calc(100vh - 166px);
+  background: #f7f6f1;
+}
+
+.account-page {
+  width: min(760px, 85.7%);
+  margin: 0 auto;
+  padding: 46px 0 90px;
+}
+
+.account-back-link {
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: #77786f;
+  cursor: pointer;
+  font: inherit;
+  font-size: 12px;
+}
+
+.account-page-heading {
+  margin: 38px 0 25px;
+}
+
+.account-page-heading .eyebrow,
+.account-profile-heading .eyebrow {
+  margin-bottom: 8px;
+}
+
+.account-page-heading h1,
+.account-profile-heading h2 {
+  margin: 0;
+  font: 400 clamp(30px, 5vw, 42px) Georgia, 'Times New Roman', serif;
+  letter-spacing: -0.04em;
+}
+
+.account-page-heading > p:last-child {
+  margin: 11px 0 0;
+  color: #85867c;
+  font-size: 13px;
+}
+
+.account-profile-card {
+  padding: 32px;
+  border: 1px solid #e8e6de;
+  background: #fbfaf7;
+  box-shadow: 0 12px 40px rgb(20 24 20 / 5%);
+}
+
+.account-profile-heading {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 20px;
+  padding-bottom: 24px;
+  border-bottom: 1px solid #e8e6de;
+}
+
+.account-profile-heading h2 {
+  font-size: 27px;
+}
+
+.account-role-badge {
+  padding: 8px 11px;
+  border-radius: 20px;
+  background: #e9eee8;
+  color: #405447;
+  font-size: 11px;
+}
+
+.account-readonly-fields {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 21px;
+  padding: 23px 0;
+}
+
+.account-readonly-fields > div {
+  display: grid;
+  gap: 7px;
+}
+
+.account-readonly-fields span {
+  color: #929287;
+  font-size: 11px;
+}
+
+.account-readonly-fields strong {
+  overflow-wrap: anywhere;
+  color: #34372f;
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.account-contact-fields {
+  padding-top: 0;
+}
+
+.account-profile-form {
+  display: grid;
+  gap: 9px;
+  padding-top: 22px;
+}
+
+.account-profile-form label {
+  color: #55574f;
+  font-size: 12px;
+}
+
+.account-field-hint {
+  margin: -5px 0 3px;
+  color: #626359;
+  font-size: 11px;
+}
+
+.account-profile-form input {
+  box-sizing: border-box;
+  width: 100%;
+  height: 43px;
+  margin-bottom: 8px;
+  padding: 0 12px;
+  border: 1px solid #e5e3db;
+  outline-color: #9da894;
+  background: #fffefa;
+  color: #34372f;
+  font: inherit;
+  font-size: 13px;
+}
+
+.account-profile-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 5px;
+}
+
+.account-primary-button,
+.account-secondary-button {
+  min-height: 42px;
+  padding: 0 16px;
+  border: 0;
+  cursor: pointer;
+  font: inherit;
+  font-size: 12px;
+}
+
+.account-primary-button {
+  background: #293a32;
+  color: #fffdf7;
+}
+
+.account-secondary-button {
+  border: 1px solid #e1dfd7;
+  background: transparent;
+  color: #505248;
+}
+
+.account-primary-button:disabled,
+.account-secondary-button:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.account-edit-button {
+  margin-bottom: 3px;
+}
+
+.account-feedback {
+  margin: 17px 0 0;
+  color: #4b6a53;
+  font-size: 13px;
+}
+
+.account-feedback-error {
+  padding: 12px 14px;
+  border: 1px solid #e6b5ab;
+  border-left: 4px solid #a83227;
+  background: #fff0ed;
+  color: #84251d;
+  font-weight: 600;
+  line-height: 1.55;
+}
+
+.account-page-message {
+  border-color: #e6b5ab;
+  border-left: 4px solid #a83227;
+  background: #fff0ed;
+  color: #84251d;
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 1.55;
+}
+
+.account-page-message > p {
+  margin: 0 0 16px;
+}
+
+.account-activity-section {
+  margin-top: 32px;
+  padding: 28px 32px;
+  border: 1px solid #e8e6de;
+  background: #fbfaf7;
+  box-shadow: 0 12px 40px rgb(20 24 20 / 5%);
+}
+
+.account-activity-heading,
+.account-order-heading,
+.account-ticket-card > header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 18px;
+}
+
+.account-activity-heading {
+  margin-bottom: 22px;
+}
+
+.account-activity-heading h2 {
+  margin: 0;
+  font: 400 26px Georgia, 'Times New Roman', serif;
+}
+
+.account-activity-count,
+.account-status-badge {
+  padding: 7px 10px;
+  border-radius: 20px;
+  background: #e9eee8;
+  color: #405447;
+  font-size: 11px;
+}
+
+.account-order-list,
+.account-ticket-list {
+  display: grid;
+  gap: 14px;
+}
+
+.account-order-groups {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 18px;
+}
+
+.account-order-groups button {
+  display: inline-flex;
+  min-height: 38px;
+  align-items: center;
+  gap: 8px;
+  padding: 0 12px;
+  border: 1px solid #e1dfd7;
+  background: #fffefa;
+  color: #5f6058;
+  cursor: pointer;
+  font: inherit;
+  font-size: 12px;
+}
+
+.account-order-groups button.selected {
+  border-color: #405447;
+  background: #e9eee8;
+  color: #344a3c;
+}
+
+.account-order-groups button span {
+  color: #85867c;
+  font-size: 11px;
+}
+
+.account-pagination {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  margin-top: 20px;
+}
+
+.account-pagination button {
+  min-height: 36px;
+  padding: 0 12px;
+  border: 1px solid #e1dfd7;
+  background: #fffefa;
+  color: #505248;
+  cursor: pointer;
+  font: inherit;
+  font-size: 11px;
+}
+
+.account-pagination button:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+.account-pagination span {
+  color: #77786f;
+  font-size: 11px;
+}
+
+.account-order-card,
+.account-ticket-card {
+  padding: 18px;
+  border: 1px solid #e8e6de;
+  background: #fffefa;
+}
+
+.account-order-heading > div,
+.account-ticket-card > header > div {
+  display: grid;
+  gap: 6px;
+}
+
+.account-order-heading strong,
+.account-ticket-card > header strong {
+  color: #34372f;
+  font-size: 14px;
+}
+
+.account-order-number {
+  width: fit-content;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: #34372f;
+  cursor: pointer;
+  font: inherit;
+  font-size: 14px;
+  font-weight: 700;
+  text-align: left;
+}
+
+.account-order-number:hover {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.account-order-number:focus-visible {
+  outline: 2px solid #9da894;
+  outline-offset: 3px;
+}
+
+.account-order-details {
+  margin-top: 16px;
+}
+
+.account-order-heading span,
+.account-ticket-card > header span,
+.account-ticket-card time {
+  color: #85867c;
+  font-size: 11px;
+}
+
+.account-order-card ul {
+  display: grid;
+  gap: 6px;
+  margin: 17px 0;
+  padding-left: 18px;
+  color: #5f6058;
+  font-size: 13px;
+}
+
+.account-order-card ul li {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.account-order-card ul li span,
+.account-order-address,
+.account-order-payment {
+  color: #5f6058;
+}
+
+.account-order-address,
+.account-order-payment {
+  font-size: 12px;
+  line-height: 1.55;
+}
+
+.account-order-total {
+  display: flex;
+  justify-content: space-between;
+  padding-top: 13px;
+  border-top: 1px solid #eceae3;
+  color: #77786f;
+  font-size: 12px;
+}
+
+.account-order-total strong {
+  color: #34372f;
+}
+
+.account-activity-empty {
+  margin: 0;
+  color: #85867c;
+  font-size: 13px;
+}
+
+.account-support-form {
+  display: grid;
+  gap: 9px;
+  margin-bottom: 22px;
+}
+
+.account-support-form label {
+  color: #55574f;
+  font-size: 12px;
+}
+
+.account-support-form select,
+.account-support-form textarea {
+  box-sizing: border-box;
+  width: 100%;
+  margin-bottom: 8px;
+  padding: 11px 12px;
+  border: 1px solid #e5e3db;
+  outline-color: #9da894;
+  background: #fffefa;
+  color: #34372f;
+  font: inherit;
+  font-size: 13px;
+}
+
+.account-support-form select {
+  min-height: 43px;
+}
+
+.account-support-form textarea {
+  resize: vertical;
+}
+
+.account-ticket-card > header {
+  align-items: center;
+}
+
+.account-ticket-toggle {
+  display: flex;
+  width: 100%;
+  align-items: center;
+  justify-content: space-between;
+  padding: 2px 0;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.account-ticket-toggle:focus-visible {
+  outline: 2px solid #9da894;
+  outline-offset: 4px;
+}
+
+.account-ticket-toggle-end {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.account-ticket-compact-status {
+  color: #405447;
+  font-size: 11px;
+  font-weight: 500;
+}
+
+.account-ticket-compact-status.closed {
+  color: #85867c;
+}
+
+.account-ticket-chevron {
+  width: 20px;
+  height: 20px;
+  flex: 0 0 auto;
+  fill: none;
+  stroke: #77786f;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 1.7;
+  transition: transform 160ms ease;
+}
+
+.account-ticket-chevron.expanded {
+  transform: rotate(180deg);
+}
+
+.account-ticket-details {
+  padding-top: 13px;
+  border-top: 1px solid #eceae3;
+}
+
+.account-ticket-status {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  color: #85867c;
+  font-size: 11px;
+}
+
+.account-ticket-messages {
+  display: grid;
+  height: 320px;
+  align-content: start;
+  gap: 10px;
+  margin: 15px 0;
+  overflow-y: auto;
+  padding-right: 6px;
+  scrollbar-gutter: stable;
+}
+
+.account-ticket-message {
+  padding: 12px;
+  background: #f5f4ee;
+}
+
+.account-ticket-message-admin {
+  background: #eaf0e9;
+}
+
+.account-ticket-message strong {
+  font-size: 12px;
+}
+
+.account-ticket-message p {
+  margin: 7px 0;
+  color: #41443d;
+  font-size: 13px;
+  line-height: 1.55;
+  white-space: pre-wrap;
+}
+
+.account-ticket-message time {
+  color: #85867c;
+  font-size: 10px;
+}
+
+.account-reply-form {
+  margin: 0;
+}
+
+@media (max-width: 560px) {
+  .account-page {
+    width: 90%;
+    padding-top: 32px;
+  }
+
+  .account-profile-card {
+    padding: 23px 19px;
+  }
+
+  .account-activity-section {
+    padding: 23px 19px;
+  }
+
+  .account-profile-heading {
+    flex-direction: column;
+  }
+
+  .account-readonly-fields {
+    grid-template-columns: 1fr;
+  }
+}

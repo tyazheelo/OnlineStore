@@ -1,0 +1,39 @@
+@if (reportOpen() && reportReview(); as review) {
+  <div class="moderation-overlay" (click)="closeReport()">
+    <section class="moderation-modal report-modal" role="dialog" aria-modal="true" [attr.aria-label]="t('Пожаловаться на отзыв')" (click)="$event.stopPropagation()">
+      <button class="moderation-close-button" type="button" [attr.aria-label]="t('Закрыть окно')" (click)="closeReport()">
+        <span></span><span></span>
+      </button>
+      <p class="moderation-eyebrow">{{ t('Модерация отзывов') }}</p>
+      <h2>{{ t('Пожаловаться на отзыв') }}</h2>
+      @if (review.comment) {
+        <blockquote class="report-review-quote">{{ review.comment }}</blockquote>
+      }
+      <form class="report-form" (submit)="submitReport($event)">
+        <fieldset>
+          <legend>{{ t('Выберите одну или несколько причин') }}</legend>
+          @for (reason of ['Profanity', 'NotAboutProduct', 'SexualContent', 'Spam', 'Harassment', 'Other']; track reason) {
+            <label class="report-reason-option">
+              <input
+                type="checkbox"
+                [checked]="reportReasons().includes(reason)"
+                (change)="onReportReasonChange($event, reason)"
+              />
+              <span>{{ reportReasonLabel(reason) }}</span>
+            </label>
+          }
+        </fieldset>
+        @if (reportReasons().includes('Other')) {
+          <label for="report-other-details">{{ t('Поясните причину') }}</label>
+          <textarea id="report-other-details" rows="3" maxlength="1000" required [value]="reportOtherDetails()" (input)="onReportDetailsInput($event)"></textarea>
+        }
+        <button class="moderation-submit-button" type="submit" [disabled]="reportBusy()">
+          {{ t(reportBusy() ? 'Отправляем…' : 'Отправить жалобу') }} <span>→</span>
+        </button>
+      </form>
+      @if (validationMessage() || reportMessage()) {
+        <p class="moderation-error" role="alert">{{ t(validationMessage() || reportMessage()) }}</p>
+      }
+    </section>
+  </div>
+}

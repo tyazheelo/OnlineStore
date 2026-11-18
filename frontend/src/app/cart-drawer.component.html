@@ -1,0 +1,149 @@
+@if (opened()) {
+  <div class="cart-overlay" (click)="close()">
+    <aside class="cart-drawer" [attr.aria-label]="t('Корзина')" aria-modal="true" role="dialog" (click)="$event.stopPropagation()">
+      <div class="cart-drawer-header">
+        <div>
+          <p class="cart-eyebrow">{{ t('Ваш выбор') }}</p>
+          <h2>{{ t('Корзина') }} <span>({{ count() }})</span></h2>
+        </div>
+        <button class="cart-close-button" type="button" [disabled]="checkoutBusy()" [attr.aria-label]="t('Закрыть корзину')" (click)="close()">
+          <span></span><span></span>
+        </button>
+      </div>
+
+      @if (placedOrder(); as order) {
+        <section class="order-confirmation" aria-live="polite">
+          <span class="order-confirmation-mark">✓</span>
+          <p class="cart-eyebrow">{{ t('Заказ создан') }}</p>
+          <h3>{{ order.orderNumber }}</h3>
+          <dl>
+            <div><dt>{{ t('Статус заказа') }}</dt><dd>{{ t(order.status) }}</dd></div>
+            <div><dt>{{ t('Стоимость товаров') }}</dt><dd>{{ formatPrice(order.subTotal) }}</dd></div>
+            <div><dt>{{ t('Доставка') }}</dt><dd>{{ formatPrice(order.deliveryCost) }}</dd></div>
+            <div><dt>{{ t('Итого по заказу') }}</dt><dd>{{ formatPrice(order.totalCost) }}</dd></div>
+          </dl>
+          <p class="payment-disclaimer">
+            {{ t('Заказ сохранён. Онлайн-оплата не подключена, списание средств не выполнялось.') }}
+          </p>
+          <button class="cart-checkout-button" type="button" (click)="dismissOrder()">
+            {{ t('Вернуться в каталог') }} <span>→</span>
+          </button>
+        </section>
+      } @else if (checkoutOpen()) {
+        <div class="checkout-panel">
+          <p class="cart-eyebrow">{{ t('Оформление заказа') }}</p>
+          <h3>{{ t('Адрес доставки') }}</h3>
+          <p class="checkout-order-total">
+            {{ t('Позиций в заказе') }}: {{ count() }} · {{ t('Текущая стоимость товаров') }}:
+            <strong>{{ formatPrice(total()) }}</strong>
+          </p>
+          <form class="checkout-form" (submit)="submitCheckout($event)">
+            <label for="checkout-country">{{ t('Страна') }}</label>
+            <input id="checkout-country" name="country" type="text" required maxlength="100" autocomplete="country-name" />
+            <label for="checkout-region">{{ t('Регион (необязательно)') }}</label>
+            <input id="checkout-region" name="state" type="text" maxlength="100" autocomplete="address-level1" />
+            <label for="checkout-city">{{ t('Город') }}</label>
+            <input id="checkout-city" name="city" type="text" required maxlength="100" autocomplete="address-level2" />
+            <label for="checkout-street">{{ t('Улица, дом и квартира') }}</label>
+            <input id="checkout-street" name="street" type="text" required maxlength="200" autocomplete="street-address" />
+            <label for="checkout-postal-code">{{ t('Почтовый индекс') }}</label>
+            <input id="checkout-postal-code" name="postalCode" type="text" required minlength="3" maxlength="20" autocomplete="postal-code" />
+            <div class="checkout-payment">
+              <span>{{ t('Способ оплаты') }}</span>
+              <strong>{{ t('Банковская карта') }}</strong>
+              <p>{{ t('Онлайн-оплата не подключена. Заказ будет создан без списания средств.') }}</p>
+            </div>
+            @if (checkoutError()) {
+              <p class="checkout-error" role="alert">{{ t(checkoutError()) }}</p>
+            }
+            @if (cartError()) {
+              <p class="checkout-error" role="alert">{{ t(cartError()) }}</p>
+            }
+            @if (authenticated() && hasUnsyncedItems()) {
+              <button class="checkout-back-button" type="button" [disabled]="cartBusy()" (click)="cartSyncRequested.emit()">
+                {{ t('Повторить синхронизацию корзины') }}
+              </button>
+            }
+            <button class="cart-checkout-button" type="submit" [disabled]="checkoutBusy() || cartBusy() || items().length === 0 || hasUnsyncedItems() || hasUnavailableItems()">
+              {{ t(checkoutBusy() ? 'Создаём заказ…' : 'Подтвердить заказ') }} <span>→</span>
+            </button>
+            <button class="checkout-back-button" type="button" [disabled]="checkoutBusy()" (click)="cancelCheckout()">
+              {{ t('Вернуться в корзину') }}
+            </button>
+          </form>
+        </div>
+      } @else if (items().length > 0) {
+        <div class="cart-lines">
+          @for (item of items(); track item.product.id) {
+            <article class="cart-line">
+              <button
+                class="cart-product-image-link"
+                type="button"
+                [attr.aria-label]="t('Подробнее о товаре: ') + productName(item.product)"
+                (click)="openProduct(item.product)"
+              >
+                <img [src]="item.product.imageUrl" [alt]="productName(item.product)" />
+              </button>
+              <div class="cart-line-info">
+                <p class="cart-product-category">{{ productCategory(item.product) }}</p>
+                <button class="cart-product-name-link" type="button" (click)="openProduct(item.product)">
+                  {{ productName(item.product) }}
+                </button>
+                <span>{{ formatPrice(item.product.price) }}</span>
+                <div class="quantity-control">
+                  <button type="button" [disabled]="cartBusy()" [attr.aria-label]="t('Уменьшить количество: ') + productName(item.product)" (click)="quantityChanged.emit({ productId: item.product.id, delta: -1 })">−</button>
+                  <span>{{ item.quantity }}</span>
+                  <button type="button" [disabled]="cartBusy()" [attr.aria-label]="t('Увеличить количество: ') + productName(item.product)" (click)="quantityChanged.emit({ productId: item.product.id, delta: 1 })">+</button>
+                </div>
+              </div>
+              @if (item.available === false) {
+                <span class="cart-item-unavailable">{{ t('Недоступно в выбранном количестве') }}</span>
+              }
+              <button class="remove-line" type="button" [disabled]="cartBusy()" [attr.aria-label]="t('Удалить ') + productName(item.product)" (click)="itemRemoved.emit(item.product.id)">×</button>
+            </article>
+          }
+        </div>
+        <div class="cart-summary">
+          <div><span>{{ t('Итого') }}</span><strong>{{ formatPrice(total()) }}</strong></div>
+          <p>{{ t('Доставка рассчитывается при оформлении') }}</p>
+          @if (cartError()) {
+            <p class="checkout-error" role="alert">{{ t(cartError()) }}</p>
+          }
+          @if (hasUnsyncedItems()) {
+            <button class="checkout-back-button" type="button" [disabled]="cartBusy()" (click)="cartSyncRequested.emit()">
+              {{ t('Повторить синхронизацию корзины') }}
+            </button>
+          }
+          <button
+            class="cart-checkout-button"
+            type="button"
+            [disabled]="cartBusy() || items().length === 0 || hasUnavailableItems() || (authenticated() && hasUnsyncedItems())"
+            (click)="startCheckout()"
+          >
+            {{ t(authenticated() ? 'Перейти к оформлению' : 'Войдите для оформления заказа') }} <span>→</span>
+          </button>
+          @if (hasUnavailableItems()) {
+            <span class="checkout-note">{{ t('Некоторые товары недоступны в указанном количестве. Измените корзину.') }}</span>
+          }
+          @if (!authenticated()) {
+            <span class="checkout-note">{{ t('Для оформления заказа необходимо войти в аккаунт.') }}</span>
+          }
+        </div>
+      } @else if (cartBusy()) {
+        <div class="empty-cart">
+          <p>{{ t('Загружаем корзину…') }}</p>
+        </div>
+      } @else {
+        <div class="empty-cart">
+          <span class="empty-cart-icon">＋</span>
+          <h3>{{ t('Здесь пока пусто') }}</h3>
+          @if (cartError()) {
+            <p class="checkout-error" role="alert">{{ t(cartError()) }}</p>
+          }
+          <p>{{ t('Добавьте в корзину то, что вам понравилось.') }}</p>
+          <button class="cart-text-button" type="button" (click)="close()">{{ t('Вернуться к покупкам') }}</button>
+        </div>
+      }
+    </aside>
+  </div>
+}

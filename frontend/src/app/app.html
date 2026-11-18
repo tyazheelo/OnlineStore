@@ -1,0 +1,725 @@
+@if (!adminPage()) {
+<div class="announcement">
+  <span>{{ t('Доставка бесплатно при заказе от 5 000 ₽') }}</span>
+</div>
+
+<header class="site-header">
+  <a class="brand" href="/" [attr.aria-label]="t('FORMA — на главную')">
+    <span class="brand-mark">f.</span>
+    <span class="brand-name">FORMA</span>
+  </a>
+
+  <nav class="main-nav" [attr.aria-label]="t('Основная навигация')">
+    <a class="nav-link active" href="/#catalog" [attr.aria-label]="t('Каталог')" [attr.title]="t('Каталог')">
+      <svg class="nav-icon" viewBox="0 0 24 24" aria-hidden="true">
+        <path d="M4 5.5h6v6H4zM14 5.5h6v6h-6zM4 15.5h6v6H4zM14 15.5h6v6h-6z"></path>
+      </svg>
+      <span class="nav-label">{{ t('Каталог') }}</span>
+    </a>
+    <a class="nav-link" href="/#about" [attr.aria-label]="t('О нас')" [attr.title]="t('О нас')">
+      <svg class="nav-icon" viewBox="0 0 24 24" aria-hidden="true">
+        <circle cx="12" cy="12" r="9"></circle>
+        <path d="M12 11v5m0-8h.01"></path>
+      </svg>
+      <span class="nav-label">{{ t('О нас') }}</span>
+    </a>
+  </nav>
+
+  <div class="header-actions">
+    <button
+      class="icon-button account-button"
+      type="button"
+      [attr.aria-label]="currentUser() ? t('Открыть аккаунт') : t('Войти или открыть аккаунт')"
+      (click)="openAccount()"
+    >
+      <svg viewBox="0 0 24 24" aria-hidden="true">
+        <circle cx="12" cy="8" r="3.5"></circle>
+        <path d="M5.5 20a6.5 6.5 0 0 1 13 0"></path>
+      </svg>
+      <span class="action-label">{{ currentUser()?.firstName || t('Войти') }}</span>
+    </button>
+    @if (isAdmin()) {
+      <button class="icon-button moderation-button" type="button" (click)="openAdminSupport()">
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M4 5.5h16v11H9l-5 3v-14Z"></path>
+          <path d="M8 9h8m-8 4h5"></path>
+        </svg>
+        <span class="action-label">{{ t('Заказы и поддержка') }}</span>
+      </button>
+    }
+    <button
+      class="icon-button cart-button"
+      type="button"
+      [attr.aria-label]="t('Открыть корзину')"
+      (click)="cartOpen.set(true)"
+    >
+      <svg viewBox="0 0 24 24" aria-hidden="true">
+        <path d="M3.5 4h2l2.1 11.1a2 2 0 0 0 2 1.6h7.8a2 2 0 0 0 1.9-1.4L21 8H6"></path>
+        <circle cx="10" cy="20" r="1"></circle>
+        <circle cx="18" cy="20" r="1"></circle>
+      </svg>
+      <span class="action-label">{{ t('Корзина') }}</span>
+      @if (cartCount() > 0) {
+        <span class="cart-count">{{ cartCount() }}</span>
+      }
+    </button>
+    <div class="language-switch" role="group" [attr.aria-label]="t('Язык сайта')">
+      <button type="button" [class.selected]="language.current() === 'ru'" [attr.aria-pressed]="language.current() === 'ru'" (click)="setLanguage('ru')">RU</button>
+      <button type="button" [class.selected]="language.current() === 'en'" [attr.aria-pressed]="language.current() === 'en'" (click)="setLanguage('en')">EN</button>
+    </div>
+    @if (currentUser()) {
+      <button
+        class="icon-button logout-button"
+        type="button"
+        [attr.aria-label]="t('Выйти из аккаунта')"
+        [attr.title]="t('Выйти из аккаунта')"
+        (click)="logout()"
+      >
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M10 4H5.5A1.5 1.5 0 0 0 4 5.5v13A1.5 1.5 0 0 0 5.5 20H10"></path>
+          <path d="M14 8l4 4-4 4m4-4H9"></path>
+        </svg>
+      </button>
+    }
+  </div>
+</header>
+}
+
+@if (!accountPage()) {
+<main>
+  <section class="hero" aria-labelledby="hero-title">
+    <div class="hero-copy">
+      <p class="eyebrow"><span></span> {{ t('Вещи для повседневной жизни') }}</p>
+      <h1 id="hero-title">{{ t('Хорошие вещи.') }}<br /><em>{{ t('На каждый день.') }}</em></h1>
+      <p class="hero-description">
+        {{ t('Собрали предметы, которые радуют простотой, качеством и вниманием к деталям.') }}
+      </p>
+      <a class="hero-link" href="#catalog">
+        {{ t('Смотреть каталог') }}
+        <svg viewBox="0 0 20 20" aria-hidden="true">
+          <path d="M4 10h12M10 4l6 6-6 6"></path>
+        </svg>
+      </a>
+    </div>
+    <div class="hero-art" role="img" [attr.aria-label]="t('Подборка лаконичных повседневных вещей')">
+      <div class="hero-orbit"></div>
+      <div class="hero-note"><span>01</span> {{ t('Выбор редакции') }}</div>
+      <div class="hero-object hero-object-one"></div>
+      <div class="hero-object hero-object-two"></div>
+      <div class="hero-object hero-object-three"></div>
+      <div class="hero-stamp">{{ t('Меньше,') }}<br />{{ t('но лучше') }}</div>
+    </div>
+  </section>
+
+  <section id="catalog" class="catalog-section" aria-labelledby="catalog-title">
+    <div class="section-heading">
+      <div>
+        <p class="eyebrow">{{ t('Подборка FORMA') }}</p>
+        <h2 id="catalog-title">{{ t('Каталог') }} <span>({{ filteredProducts().length }})</span></h2>
+      </div>
+      <label class="search-box">
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <circle cx="10.8" cy="10.8" r="6.8"></circle>
+          <path d="m16 16 4.5 4.5"></path>
+        </svg>
+        <input
+          type="search"
+          [placeholder]="t('Найти вещь')"
+          [attr.aria-label]="t('Поиск товаров')"
+          [value]="searchTerm()"
+          (input)="onSearch($event)"
+        />
+        <span class="search-shortcut">⌕</span>
+      </label>
+    </div>
+
+    <div class="catalog-toolbar">
+      <div class="catalog-filters">
+        <div class="category-list" [attr.aria-label]="t('Категории товаров')">
+          @for (category of categories(); track category) {
+            <button
+              class="category-chip"
+              [class.selected]="selectedCategory() === category"
+              type="button"
+              (click)="selectedCategory.set(category)"
+            >
+              {{ categoryLabel(category) }}
+            </button>
+          }
+        </div>
+        <div class="tag-filter" [attr.aria-label]="t('Фильтр по меткам')">
+          <span class="tag-filter-label">{{ t('Подборка') }}</span>
+          @for (tag of tags(); track tag) {
+            <button
+              class="tag-chip"
+              [class.selected]="selectedTag() === tag"
+              type="button"
+              (click)="selectedTag.set(tag)"
+            >
+              {{ tagLabel(tag) }}
+            </button>
+          }
+        </div>
+        <div class="price-filter" [attr.aria-label]="t('Фильтр по цене')">
+          <span class="price-filter-label">{{ t('Цена') }}</span>
+          <label class="price-input">
+            <span>{{ t('от') }}</span>
+            <input
+              type="number"
+              min="0"
+              step="100"
+              placeholder="0"
+              [attr.aria-label]="t('Минимальная цена')"
+              [value]="minPrice() ?? ''"
+              (input)="onPriceInput($event, 'min')"
+            />
+            <span>₽</span>
+          </label>
+          <span class="price-separator">—</span>
+          <label class="price-input">
+            <span>{{ t('до') }}</span>
+            <input
+              type="number"
+              min="0"
+              step="100"
+              placeholder="∞"
+              [attr.aria-label]="t('Максимальная цена')"
+              [value]="maxPrice() ?? ''"
+              (input)="onPriceInput($event, 'max')"
+            />
+            <span>₽</span>
+          </label>
+          @if (minPrice() !== null || maxPrice() !== null || searchTerm() || selectedCategory() !== 'Все товары' || selectedTag() !== 'Все метки') {
+            <button class="reset-filter-button" type="button" (click)="resetFilters()">
+              {{ t('Сбросить') }}
+            </button>
+          }
+        </div>
+      </div>
+      <span class="results-label">
+        @if (!productsLoaded()) {
+          {{ t('Загружаем каталог…') }}
+        } @else if (productsError()) {
+          {{ t('Каталог недоступен') }}
+        } @else if (invalidPriceRange()) {
+          {{ t('Минимальная цена больше максимальной') }}
+        } @else {
+          {{ t('Найдено товаров:') }} {{ filteredProducts().length }}
+        }
+      </span>
+    </div>
+
+    @if (isAdmin()) {
+      <div class="admin-catalog-actions">
+        <button class="admin-catalog-button" type="button" (click)="openCategoryCreation()">
+          {{ t('+ Добавить категорию') }}
+        </button>
+        <button class="admin-catalog-button" type="button" (click)="openProductCreation()">
+          {{ t('+ Добавить товар') }}
+        </button>
+      </div>
+    }
+
+    @if (!productsLoaded()) {
+      <div class="empty-results"><p>{{ t('Загружаем каталог…') }}</p></div>
+    } @else if (productsError()) {
+      <div class="empty-results empty-results-error" role="alert"><p>{{ t(productsError()) }}</p></div>
+    } @else if (products().length === 0) {
+      <div class="empty-results">
+        <span class="empty-icon">⌕</span>
+        <h3>{{ t('В каталоге пока нет товаров') }}</h3>
+        <p>{{ t('Когда товары появятся в базе данных, они отобразятся здесь.') }}</p>
+      </div>
+    } @else if (filteredProducts().length > 0) {
+      <div class="product-grid">
+        @for (product of visibleProducts(); track product.id) {
+          <article class="product-card">
+            <button
+              class="product-open"
+              type="button"
+              [attr.aria-label]="t('Подробнее о товаре: ') + productName(product)"
+              (click)="openProduct(product)"
+            ></button>
+            <div class="product-image-wrap">
+              <img
+                class="product-image"
+                [src]="product.imageUrl"
+                [alt]="productName(product)"
+                loading="lazy"
+              />
+              @if (product.tags.length > 0) {
+                <span class="product-badge" [class.badge-dark]="product.tags.includes('Хит')">
+                  {{ tagLabel(product.tags[0]) }}
+                </span>
+              }
+              <button
+                class="quick-add"
+                type="button"
+                [attr.aria-label]="t('Добавить «') + productName(product) + t('» в корзину')"
+                (click)="$event.stopPropagation(); addToCart(product)"
+              >
+                <svg viewBox="0 0 20 20" aria-hidden="true">
+                  <path d="M10 4v12M4 10h12"></path>
+                </svg>
+              </button>
+            </div>
+            <div class="product-info">
+              <div>
+                <p class="product-category">{{ productCategory(product) }}</p>
+                <h3>{{ productName(product) }}</h3>
+              </div>
+              <p class="product-price">{{ formatPrice(product.price) }}</p>
+            </div>
+            <p class="product-description">{{ productDescription(product) }}</p>
+            <div class="product-rating" [attr.aria-label]="t('Рейтинг товара')">
+              <span class="rating-stars" aria-hidden="true">
+                @for (star of stars; track star) {
+                  <span [class.filled]="star <= roundedRating(product.ratingAverage)">★</span>
+                }
+              </span>
+              <span>{{ (product.ratingAverage ?? 0) | number:'1.1-1' }} · {{ reviewCountLabel(product.reviewCount ?? 0) }}</span>
+            </div>
+          </article>
+        }
+      </div>
+      @if (catalogPageCount() > 1) {
+        <nav class="pagination" [attr.aria-label]="t('Пагинация каталога')">
+          <button type="button" [disabled]="catalogPage() === 1" (click)="changeCatalogPage(-1)">
+            {{ t('Предыдущая') }}
+          </button>
+          <span>{{ t('Страница') }} {{ catalogPage() }} {{ t('из') }} {{ catalogPageCount() }}</span>
+          <button type="button" [disabled]="catalogPage() === catalogPageCount()" (click)="changeCatalogPage(1)">
+            {{ t('Следующая') }}
+          </button>
+        </nav>
+      }
+    } @else {
+      <div class="empty-results">
+        <span class="empty-icon">⌕</span>
+        <h3>{{ t('Ничего не нашлось') }}</h3>
+        <p>{{ t('Измените цену, поисковый запрос или категорию.') }}</p>
+        <button class="text-button" type="button" (click)="resetFilters()">
+          {{ t('Сбросить фильтры') }}
+        </button>
+      </div>
+    }
+  </section>
+
+  <section id="about" class="about-strip">
+    <span class="about-mark">f.</span>
+    <p>{{ t('Выбираем не больше, а лучше.') }}<br /><span>{{ t('FORMA — магазин вещей с характером.') }}</span></p>
+    <a href="#catalog">{{ t('Познакомиться с выбором') }} <span>↗</span></a>
+  </section>
+</main>
+
+<footer class="site-footer">
+  <span>© 2026 FORMA</span>
+  <span>{{ t('Вещи, которые остаются с вами') }}</span>
+  <a href="#catalog">{{ t('Наверх ↑') }}</a>
+</footer>
+}
+
+<router-outlet></router-outlet>
+
+<app-cart-drawer
+  [items]="cartItems()"
+  [opened]="cartOpen()"
+  [authenticated]="!!currentUser()"
+  [cartBusy]="cartBusy()"
+  [cartError]="cartError()"
+  [hasUnsyncedItems]="hasUnsyncedCartItems()"
+  [checkoutBusy]="checkoutBusy()"
+  [checkoutError]="checkoutError()"
+  [placedOrder]="placedOrder()"
+  (closed)="closeCart()"
+  (quantityChanged)="changeQuantity($event.productId, $event.delta)"
+  (itemRemoved)="removeFromCart($event)"
+  (productOpened)="openProduct($event)"
+  (authenticationRequested)="requestCheckoutAuthentication()"
+  (cartSyncRequested)="retryCartSynchronization()"
+  (checkoutRequested)="requestCheckout($event)"
+  (orderNoticeDismissed)="dismissOrderNotice()"
+></app-cart-drawer>
+
+@if (accountOpen()) {
+  <div class="overlay account-overlay" (click)="accountOpen.set(false)">
+    <section
+      class="account-modal"
+      [attr.aria-label]="t('Вход в аккаунт')"
+      aria-modal="true"
+      role="dialog"
+      (click)="$event.stopPropagation()"
+    >
+      <button class="close-button modal-close" type="button" [attr.aria-label]="t('Закрыть окно')" (click)="accountOpen.set(false)">
+        <span></span><span></span>
+      </button>
+      <span class="account-mark">f.</span>
+      <p class="eyebrow">{{ t('Рады вас видеть') }}</p>
+      <h2>{{ t('Ваш аккаунт') }}</h2>
+      <p class="modal-description">
+        {{ t(authMode() === 'login' ? 'Войдите, чтобы оформить заказ и оставить отзыв о товаре.' : 'Создайте аккаунт, чтобы оформлять заказы и делиться впечатлениями о товарах.') }}
+      </p>
+      <form (submit)="submitAuth($event)">
+        @if (authMode() === 'register') {
+          <label for="account-first-name">{{ t('Имя') }}</label>
+          <input
+            id="account-first-name"
+            type="text"
+            required
+            maxlength="100"
+            [value]="firstName()"
+            (input)="onNameInput($event, 'firstName')"
+          />
+          <label for="account-last-name">{{ t('Фамилия') }}</label>
+          <input
+            id="account-last-name"
+            type="text"
+            required
+            maxlength="100"
+            [value]="lastName()"
+            (input)="onNameInput($event, 'lastName')"
+          />
+          <label for="account-user-name">{{ t('Имя пользователя') }}</label>
+          <input
+            id="account-user-name"
+            type="text"
+            required
+            minlength="3"
+            maxlength="256"
+            autocomplete="username"
+            pattern="[A-Za-z0-9._+\-]+"
+            [value]="userName()"
+            (input)="onUserNameInput($event)"
+          />
+          <p class="password-requirements">{{ t('Используйте латинские буквы, цифры и символы . _ + -') }}</p>
+        }
+        <label for="account-email">{{ t(authMode() === 'register' ? 'Электронная почта' : 'Имя пользователя или электронная почта') }}</label>
+        <input
+          id="account-email"
+          [type]="authMode() === 'register' ? 'email' : 'text'"
+          [placeholder]="authMode() === 'register' ? 'name@example.com' : t('Имя пользователя или почта')"
+          required
+          [value]="email()"
+          (input)="onEmailInput($event)"
+          [attr.autocomplete]="authMode() === 'register' ? 'email' : 'username'"
+        />
+        <label for="account-password">{{ t('Пароль') }}</label>
+        @if (authMode() === 'register') {
+          <p class="password-requirements">
+            {{ t('Не менее 6 символов, включая заглавную и строчную буквы, цифру и спецсимвол.') }}
+          </p>
+        }
+        <input
+          id="account-password"
+          type="password"
+          required
+          [attr.autocomplete]="authMode() === 'register' ? 'new-password' : 'current-password'"
+          [value]="password()"
+          (input)="onPasswordInput($event)"
+        />
+        <button class="checkout-button" type="submit" [disabled]="authBusy()">
+          {{ t(authMode() === 'login' ? 'Войти' : 'Создать аккаунт') }} <span>→</span>
+        </button>
+      </form>
+      @if (authMessage()) {
+        <p class="auth-message" role="alert">{{ t(authMessage()) }}</p>
+      } @else {
+        <button class="auth-mode-button" type="button" (click)="toggleAuthMode()">
+          {{ t(authMode() === 'login' ? 'Нет аккаунта? Зарегистрироваться' : 'Уже есть аккаунт? Войти') }}
+        </button>
+      }
+    </section>
+  </div>
+}
+
+@if (adminProductOpen() && isAdmin()) {
+  <div class="overlay account-overlay" (click)="closeProductCreation()">
+    <section
+      class="account-modal"
+      [attr.aria-label]="t(productBeingEdited() ? 'Редактировать товар' : 'Добавить товар в каталог')"
+      aria-modal="true"
+      role="dialog"
+      (click)="$event.stopPropagation()"
+    >
+      <button
+        class="close-button modal-close"
+        type="button"
+        [attr.aria-label]="t('Закрыть окно')"
+        [disabled]="adminProductBusy()"
+        (click)="closeProductCreation()"
+      >
+        <span></span><span></span>
+      </button>
+      <span class="account-mark">f.</span>
+      <p class="eyebrow">{{ t('Управление каталогом') }}</p>
+      <h2>{{ t(productBeingEdited() ? 'Редактировать товар' : 'Новый товар') }}</h2>
+      <form (submit)="saveProduct($event)">
+        <label for="new-product-name">{{ t('Название (русский)') }}</label>
+        <input
+          id="new-product-name"
+          type="text"
+          required
+          maxlength="200"
+          [value]="newProductName()"
+          (input)="onNewProductTextInput($event, 'name')"
+        />
+        <label for="new-product-name-en">{{ t('Название (английский)') }}</label>
+        <input
+          id="new-product-name-en"
+          type="text"
+          maxlength="200"
+          [placeholder]="t('Необязательно, если пока нет перевода')"
+          [value]="newProductNameEn()"
+          (input)="onNewProductTextInput($event, 'nameEn')"
+        />
+        <label for="new-product-description">{{ t('Описание (русский)') }}</label>
+        <textarea
+          id="new-product-description"
+          rows="3"
+          required
+          maxlength="1000"
+          [value]="newProductDescription()"
+          (input)="onNewProductTextInput($event, 'description')"
+        ></textarea>
+        <label for="new-product-description-en">{{ t('Описание (английский)') }}</label>
+        <textarea
+          id="new-product-description-en"
+          rows="3"
+          maxlength="1000"
+          [placeholder]="t('Необязательно, если пока нет перевода')"
+          [value]="newProductDescriptionEn()"
+          (input)="onNewProductTextInput($event, 'descriptionEn')"
+        ></textarea>
+        <label for="new-product-category">{{ t('Категория') }}</label>
+        <select
+          id="new-product-category"
+          required
+          [value]="newProductCategoryId()"
+          (change)="onNewProductCategoryChange($event)"
+        >
+          @for (category of categoryOptions(); track category.id) {
+            <option [value]="category.id">{{ categoryOptionLabel(category) }}</option>
+          }
+        </select>
+        <label for="new-product-price">{{ t('Цена, ₽') }}</label>
+        <input
+          id="new-product-price"
+          type="number"
+          min="0.01"
+          step="0.01"
+          required
+          [value]="newProductPrice() ?? ''"
+          (input)="onNewProductNumberInput($event, 'price')"
+        />
+        @if (!productBeingEdited()) {
+          <label for="new-product-stock">{{ t('Количество на складе') }}</label>
+          <input
+            id="new-product-stock"
+            type="number"
+            min="0"
+            step="1"
+            required
+            [value]="newProductStock() ?? ''"
+            (input)="onNewProductNumberInput($event, 'stock')"
+          />
+        }
+        <label for="new-product-image">{{ t('Ссылка на изображение (необязательно)') }}</label>
+        <input
+          id="new-product-image"
+          type="url"
+          maxlength="2048"
+          [value]="newProductImageUrl()"
+          (input)="onNewProductTextInput($event, 'imageUrl')"
+        />
+        <p class="admin-product-field-hint">
+          {{ t('Вставьте прямую публичную ссылку на изображение. Ссылки на страницы фотохостингов могут не отображаться.') }}
+        </p>
+        @if (canPreviewProductImage()) {
+          <div class="admin-product-image-preview">
+            <img [src]="newProductImageUrl()" [alt]="t('Предпросмотр изображения')" />
+          </div>
+        }
+        <fieldset class="admin-product-specifications">
+          <legend>{{ t('Характеристики товара') }}</legend>
+          <label for="product-specifications-file">{{ t('Загрузить JSON-файл') }}</label>
+          <input
+            id="product-specifications-file"
+            type="file"
+            accept=".json,application/json"
+            (change)="importProductSpecifications($event)"
+          />
+          <p class="admin-product-field-hint">
+            {{ t('Формат JSON: объект, где название характеристики — ключ, а значение — строка.') }}
+          </p>
+          @for (specification of productSpecifications(); track $index; let index = $index) {
+            <div class="admin-product-specification-row">
+              <input
+                type="text"
+                [attr.aria-label]="t('Название характеристики')"
+                [placeholder]="t('Название характеристики')"
+                [value]="specification.key"
+                (input)="updateProductSpecification(index, 'key', $event)"
+              />
+              <input
+                type="text"
+                [attr.aria-label]="t('Значение характеристики')"
+                [placeholder]="t('Значение характеристики')"
+                [value]="specification.value"
+                (input)="updateProductSpecification(index, 'value', $event)"
+              />
+              <input
+                type="text"
+                [attr.aria-label]="t('Название характеристики (английский)')"
+                [placeholder]="t('Название характеристики (английский)')"
+                [value]="specification.keyEn"
+                (input)="updateProductSpecification(index, 'keyEn', $event)"
+              />
+              <input
+                type="text"
+                [attr.aria-label]="t('Значение характеристики (английский)')"
+                [placeholder]="t('Значение характеристики (английский)')"
+                [value]="specification.valueEn"
+                (input)="updateProductSpecification(index, 'valueEn', $event)"
+              />
+              <button
+                class="admin-product-specification-remove"
+                type="button"
+                [attr.aria-label]="t('Удалить характеристику')"
+                (click)="removeProductSpecification(index)"
+              >×</button>
+            </div>
+          }
+          <button class="admin-product-specification-add" type="button" (click)="addProductSpecification()">
+            {{ t('+ Добавить характеристику') }}
+          </button>
+        </fieldset>
+        <label for="new-product-tags">{{ t('Метки через запятую (необязательно)') }}</label>
+        <input
+          id="new-product-tags"
+          type="text"
+          list="product-tag-options"
+          [value]="newProductTags()"
+          (input)="onNewProductTextInput($event, 'tags')"
+        />
+        <datalist id="product-tag-options">
+          @for (tag of productTagSuggestions(); track tag) {
+            <option [value]="tag"></option>
+          }
+        </datalist>
+        @if (productTagSuggestions().length > 0) {
+          <div class="admin-product-tag-suggestions" [attr.aria-label]="t('Возможные метки')">
+            @for (tag of productTagSuggestions(); track tag) {
+              <button
+                class="admin-product-tag-option"
+                [class.selected]="isProductTagSelected(tag)"
+                type="button"
+                (click)="toggleProductTag(tag)"
+              >{{ tag }}</button>
+            }
+          </div>
+        }
+        <button class="checkout-button" type="submit" [disabled]="adminProductBusy()">
+          {{ t(adminProductBusy()
+            ? (productBeingEdited() ? 'Сохраняем…' : 'Добавляем…')
+            : (productBeingEdited() ? 'Сохранить изменения' : 'Добавить товар')) }} <span>→</span>
+        </button>
+      </form>
+      @if (adminProductMessage()) {
+        <p class="auth-message" role="alert">{{ t(adminProductMessage()) }}</p>
+      }
+    </section>
+  </div>
+}
+
+@if (categoryCreationOpen() && isAdmin()) {
+  <div class="overlay account-overlay" (click)="closeCategoryCreation()">
+    <section
+      class="account-modal category-modal"
+      [attr.aria-label]="t('Добавить категорию')"
+      aria-modal="true"
+      role="dialog"
+      (click)="$event.stopPropagation()"
+    >
+      <button
+        class="close-button modal-close"
+        type="button"
+        [attr.aria-label]="t('Закрыть окно')"
+        [disabled]="categoryCreationBusy()"
+        (click)="closeCategoryCreation()"
+      >
+        <span></span><span></span>
+      </button>
+      <span class="account-mark">f.</span>
+      <p class="eyebrow">{{ t('Управление каталогом') }}</p>
+      <h2>{{ t('Новая категория') }}</h2>
+      <form (submit)="saveCategory($event)">
+        <label for="new-category-name">{{ t('Название категории (русский)') }}</label>
+        <input
+          id="new-category-name"
+          type="text"
+          required
+          maxlength="100"
+          [value]="newCategoryName()"
+          (input)="onCategoryNameInput($event)"
+        />
+        <label for="new-category-name-en">{{ t('Название категории (английский)') }}</label>
+        <input
+          id="new-category-name-en"
+          type="text"
+          maxlength="100"
+          [placeholder]="t('Необязательно, если пока нет перевода')"
+          [value]="newCategoryNameEn()"
+          (input)="onCategoryNameEnInput($event)"
+        />
+        <p class="admin-product-field-hint">{{ t('Название должно быть уникальным.') }}</p>
+        <button class="checkout-button" type="submit" [disabled]="categoryCreationBusy()">
+          {{ t(categoryCreationBusy() ? 'Добавляем…' : 'Добавить категорию') }} <span>→</span>
+        </button>
+      </form>
+      @if (categoryCreationMessage()) {
+        <p class="auth-message" role="alert">{{ t(categoryCreationMessage()) }}</p>
+      }
+    </section>
+  </div>
+}
+
+@if (selectedProduct(); as product) {
+  <app-product-detail
+    [product]="product"
+    [reviews]="reviews()"
+    [reviewsLoading]="reviewsLoading()"
+    [isAdmin]="isAdmin()"
+    [isAuthenticated]="!!currentUser()"
+    [moderationBusy]="moderationBusy()"
+    [reviewBusy]="reviewBusy()"
+    [reviewRating]="reviewRating()"
+    [reviewComment]="reviewComment()"
+    [reviewMessage]="reviewMessage()"
+    (closed)="closeProduct()"
+    (addToCart)="addToCart($event)"
+    (editProduct)="openProductEdit($event)"
+    (reportReview)="openReportForm($event)"
+    (hideReview)="hideReview($event)"
+    (reviewSubmitted)="submitReview($event)"
+    (ratingChanged)="selectRating($event)"
+    (commentChanged)="setReviewComment($event)"
+    (accountRequested)="openAccount()"
+  ></app-product-detail>
+}
+
+@if (toastMessage()) {
+  <div class="toast" role="status">
+    <span class="toast-check">✓</span>
+    {{ toastMessage() }}
+  </div>
+}
+
+<app-review-moderation
+  [reportReview]="reportReview()"
+  [reportOpen]="reportOpen()"
+  [reportBusy]="reportBusy()"
+  [reportMessage]="reportMessage()"
+  (reportSubmitted)="submitReport($event)"
+  (reportClosed)="closeReportForm()"
+  (reportMessageCleared)="clearReportMessage()"
+></app-review-moderation>

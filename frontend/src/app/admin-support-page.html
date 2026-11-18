@@ -1,0 +1,298 @@
+<main class="admin-page">
+  <button class="admin-back-link" type="button" (click)="goToStore()">← {{ t('Вернуться в магазин') }}</button>
+  <header class="admin-heading">
+    <div>
+      <p class="eyebrow">{{ t('Панель администратора') }}</p>
+      <h1>{{ t('Заказы и поддержка') }}</h1>
+      <p>{{ t('Управляйте заказами и обращениями покупателей.') }}</p>
+    </div>
+    <div class="admin-heading-actions">
+      <div class="admin-language-switch" role="group" [attr.aria-label]="t('Язык сайта')">
+        <button type="button" [class.selected]="language.current() === 'ru'" [attr.aria-pressed]="language.current() === 'ru'" (click)="setLanguage('ru')">RU</button>
+        <button type="button" [class.selected]="language.current() === 'en'" [attr.aria-pressed]="language.current() === 'en'" (click)="setLanguage('en')">EN</button>
+      </div>
+      <div class="admin-counts">
+        <span>{{ t('Заказы') }} <strong>{{ orders().length }}</strong></span>
+        <span>{{ t('Обращения') }} <strong>{{ tickets().length }}</strong></span>
+        <span>{{ t('Жалобы на отзывы') }} <strong>{{ reviewReports().length }}</strong></span>
+      </div>
+    </div>
+  </header>
+
+  @if (errorMessage()) {
+    <p class="admin-feedback admin-feedback-error" role="alert">{{ t(errorMessage()) }}</p>
+  }
+  @if (statusMessage()) {
+    <p class="admin-feedback" role="status">{{ t(statusMessage()) }}</p>
+  }
+  @if (loading()) {
+    <section class="admin-panel admin-loading" aria-live="polite">{{ t('Загружаем заказы и обращения…') }}</section>
+  } @else {
+    <section class="admin-panel">
+      <div class="admin-panel-heading">
+        <div>
+          <p class="eyebrow">{{ t('Очередь поддержки') }}</p>
+          <h2>{{ t('Обращения покупателей') }}</h2>
+        </div>
+      </div>
+      @if (tickets().length === 0) {
+        <p class="admin-empty">{{ t('Обращений пока нет.') }}</p>
+      } @else {
+        <div class="admin-support-layout">
+          <nav class="admin-ticket-list" [attr.aria-label]="t('Обращения покупателей')">
+            @for (ticket of tickets(); track ticket.id) {
+              <button
+                class="admin-ticket-select"
+                type="button"
+                [class.selected]="selectedTicketId() === ticket.id"
+                (click)="selectTicket(ticket)"
+              >
+                <span class="admin-ticket-select-top">
+                  <strong>{{ ticket.orderNumber }}</strong>
+                  <span class="admin-state" [class.resolved]="ticket.status === 'Resolved'">{{ t(ticket.status) }}</span>
+                </span>
+                <span>{{ supportCustomerName(ticket) }}</span>
+                <small>{{ ticket.messages[0]?.message }}</small>
+              </button>
+            }
+          </nav>
+          @if (selectedTicket(); as ticket) {
+            <article class="admin-ticket-detail">
+              <header class="admin-ticket-heading">
+                <div>
+                  <p class="eyebrow">{{ t('Заказ') }} {{ ticket.orderNumber }}</p>
+                  <h3>{{ supportCustomerName(ticket) }}</h3>
+                  <p class="admin-customer-id">{{ t('ID пользователя') }}: {{ ticket.customerId }}</p>
+                </div>
+                <span class="admin-state" [class.resolved]="ticket.status === 'Resolved'">{{ t(ticket.status) }}</span>
+              </header>
+              <button class="admin-linked-order" type="button" (click)="openOrder(ticket.orderId)">
+                {{ t('Открыть заказ') }} {{ ticket.orderNumber }} ↗
+              </button>
+              <div class="admin-ticket-actions">
+                @if (ticket.status !== 'Resolved' && !ticket.assignedAdminId) {
+                  <button class="admin-primary-button" type="button" [disabled]="busy() !== ''" (click)="claimTicket(ticket)">
+                    {{ t('Взять в работу') }}
+                  </button>
+                } @else if (ticket.assignedAdminId) {
+                  <span class="admin-assignee">
+                    {{ ticket.assignedAdminId === currentAdminId() ? t('Вы ответственный') : t('Взято другим администратором') }}
+                  </span>
+                }
+                @if (ticket.status !== 'Resolved' && ticket.assignedAdminId === currentAdminId()) {
+                  <button class="admin-secondary-button" type="button" [disabled]="busy() !== ''" (click)="resolveTicket(ticket)">
+                    {{ t('Закрыть обращение') }}
+                  </button>
+                }
+              </div>
+              <div class="admin-messages">
+                @for (message of ticket.messages; track message.id) {
+                  <div class="admin-message" [class.admin-message-admin]="message.isAdmin">
+                    <div><strong>{{ supportMessageAuthor(message, ticket) }}</strong><time>{{ message.createdAt | date:'short' }}</time></div>
+                    <p>{{ message.message }}</p>
+                  </div>
+                }
+              </div>
+              @if (ticket.status !== 'Resolved' && ticket.assignedAdminId === currentAdminId()) {
+                <form class="admin-reply-form" (submit)="sendReply($event)">
+                  <label [for]="'admin-reply-' + ticket.id">{{ t('Ответ покупателю') }}</label>
+                  <textarea
+                    [id]="'admin-reply-' + ticket.id"
+                    required
+                    minlength="2"
+                    maxlength="2000"
+                    rows="3"
+                    [value]="replyDraft()"
+                    (input)="onReplyInput($event)"
+                  ></textarea>
+                  <button class="admin-primary-button" type="submit" [disabled]="busy() !== ''">
+                    {{ t('Отправить ответ') }}
+                  </button>
+                </form>
+              }
+            </article>
+          }
+        </div>
+      }
+    </section>
+
+    <section class="admin-panel">
+      <div class="admin-panel-heading">
+        <div>
+          <p class="eyebrow">{{ t('Модерация отзывов') }}</p>
+          <h2>{{ t('Жалобы на отзывы') }}</h2>
+        </div>
+      </div>
+      @if (reviewReportsLoading()) {
+        <p class="admin-empty">{{ t('Загружаем жалобы…') }}</p>
+      } @else if (reviewReportsError()) {
+        <p class="admin-feedback admin-feedback-error" role="alert">{{ t(reviewReportsError()) }}</p>
+      } @else if (reviewReports().length === 0) {
+        <p class="admin-empty">{{ t('Новых жалоб нет.') }}</p>
+      } @else {
+        <div class="admin-review-report-list">
+          @for (report of reviewReports(); track report.id) {
+            <article class="admin-review-report">
+              <header class="admin-review-report-heading">
+                <div>
+                  <h3>{{ report.productName }}</h3>
+                  <p>{{ t('Автор отзыва') }}: {{ report.reviewerName }} · ★ {{ report.rating }}</p>
+                </div>
+                <time [attr.datetime]="report.reportedAtUtc">{{ report.reportedAtUtc | date:'mediumDate' }}</time>
+              </header>
+              @if (report.comment) {
+                <blockquote class="admin-review-quote">{{ report.comment }}</blockquote>
+              }
+              <ul class="admin-review-reasons">
+                @for (reason of report.reasons; track reason) {
+                  <li>{{ reportReasonLabel(reason) }}</li>
+                }
+              </ul>
+              @if (report.otherDetails) {
+                <p class="admin-review-details">{{ report.otherDetails }}</p>
+              }
+              <div class="admin-order-actions">
+                <button
+                  class="admin-primary-button"
+                  type="button"
+                  [disabled]="reviewReportBusy() !== ''"
+                  (click)="resolveReviewReport(report, true)"
+                >
+                  {{ t('Скрыть отзыв') }}
+                </button>
+                <button
+                  class="admin-secondary-button"
+                  type="button"
+                  [disabled]="reviewReportBusy() !== ''"
+                  (click)="resolveReviewReport(report, false)"
+                >
+                  {{ t('Отклонить жалобу') }}
+                </button>
+              </div>
+            </article>
+          }
+        </div>
+      }
+    </section>
+
+    <section class="admin-panel">
+      <div class="admin-panel-heading">
+        <div>
+          <p class="eyebrow">{{ t('Заказы магазина') }}</p>
+          <h2>{{ t('Заказы магазина') }}</h2>
+        </div>
+        <button class="admin-secondary-button" type="button" [disabled]="refreshingOrders()" (click)="refreshOrders()">
+          {{ t(refreshingOrders() ? 'Обновляем…' : 'Обновить заказы') }}
+        </button>
+      </div>
+      @if (orders().length === 0) {
+        <p class="admin-empty">{{ t('Заказов пока нет.') }}</p>
+      } @else {
+        <nav class="admin-order-groups" [attr.aria-label]="t('Фильтр заказов')">
+          <button
+            type="button"
+            [class.selected]="selectedOrderGroup() === 'active'"
+            [attr.aria-pressed]="selectedOrderGroup() === 'active'"
+            (click)="selectOrderGroup('active')"
+          >{{ t('Активные') }} <span>{{ orderGroupCounts().active }}</span></button>
+          <button
+            type="button"
+            [class.selected]="selectedOrderGroup() === 'cancelled'"
+            [attr.aria-pressed]="selectedOrderGroup() === 'cancelled'"
+            (click)="selectOrderGroup('cancelled')"
+          >{{ t('Отменённые') }} <span>{{ orderGroupCounts().cancelled }}</span></button>
+          <button
+            type="button"
+            [class.selected]="selectedOrderGroup() === 'completed'"
+            [attr.aria-pressed]="selectedOrderGroup() === 'completed'"
+            (click)="selectOrderGroup('completed')"
+          >{{ t('Завершённые') }} <span>{{ orderGroupCounts().completed }}</span></button>
+        </nav>
+        @if (filteredOrders().length === 0) {
+          <p class="admin-empty">{{ t('В этой группе заказов пока нет.') }}</p>
+        } @else {
+        <div class="admin-order-list">
+          @for (order of visibleOrders(); track order.id) {
+            <article class="admin-order-card" [id]="'order-' + order.id">
+              <header class="admin-order-heading">
+                <div>
+                  <h3>{{ order.orderNumber }}</h3>
+                  <p>{{ order.createdAt | date:'medium' }}</p>
+                </div>
+                <strong class="admin-order-total">{{ order.totalCost | number:'1.2-2' }} ₽</strong>
+              </header>
+              <div class="admin-order-customer">
+                <div>
+                  <span>{{ t('Покупатель') }}</span>
+                  <strong>{{ order.customerName || order.customerId }}</strong>
+                  <small>{{ order.customerEmail || order.customerId }}</small>
+                </div>
+                <label>
+                  {{ t('Статус') }}
+                  <select [disabled]="busy() !== '' || order.status === 'Cancelled' || order.status === 'PaymentConfirmationPending'" (change)="onOrderStatusChange(order, $event)">
+                    @if (order.status === 'Cancelled') {
+                      <option value="Cancelled" selected>{{ t('Cancelled') }}</option>
+                    }
+                    @if (order.status === 'PaymentConfirmationPending') {
+                      <option value="PaymentConfirmationPending" selected>{{ t('PaymentConfirmationPending') }}</option>
+                    }
+                    @for (status of orderStatuses; track status) {
+                      <option [value]="status" [selected]="order.status === status">{{ t(status) }}</option>
+                    }
+                  </select>
+                  @if (orderStatusErrors()[order.id]; as statusError) {
+                    <small class="admin-order-status-error" role="alert">{{ t(statusError) }}</small>
+                  }
+                </label>
+              </div>
+              <ul class="admin-order-items">
+                @for (item of order.items; track item.productId) {
+                  <li>{{ item.productName }} × {{ item.quantity }} <span>{{ item.totalCost | number:'1.2-2' }} ₽</span></li>
+                }
+              </ul>
+              <p class="admin-order-address"><strong>{{ t('Адрес доставки') }}:</strong> {{ order.deliveryAddress }}</p>
+              @if (editingOrderId() === order.id) {
+                @if (editingAddress(); as address) {
+                  <form class="admin-address-form" (submit)="saveAddress(order, $event)">
+                    <label>{{ t('Страна') }}<input required maxlength="100" [value]="address.country" (input)="onAddressInput('country', $event)" /></label>
+                    <label>{{ t('Регион') }}<input maxlength="100" [value]="address.state ?? ''" (input)="onAddressInput('state', $event)" /></label>
+                    <label>{{ t('Город') }}<input required maxlength="100" [value]="address.city" (input)="onAddressInput('city', $event)" /></label>
+                    <label>{{ t('Улица и дом') }}<input required maxlength="200" [value]="address.street" (input)="onAddressInput('street', $event)" /></label>
+                    <label>{{ t('Индекс') }}<input required maxlength="20" [value]="address.postalCode" (input)="onAddressInput('postalCode', $event)" /></label>
+                    <div class="admin-order-actions">
+                      <button class="admin-primary-button" type="submit" [disabled]="busy() !== ''">{{ t('Сохранить адрес') }}</button>
+                      <button class="admin-secondary-button" type="button" (click)="cancelAddressEdit()">{{ t('Отмена') }}</button>
+                    </div>
+                  </form>
+                }
+              } @else {
+                <div class="admin-order-actions">
+                  @if (order.status !== 'Cancelled' && order.status !== 'Shipped' && order.status !== 'Delivered') {
+                    <button class="admin-secondary-button" type="button" [disabled]="busy() !== ''" (click)="beginAddressEdit(order)">
+                      {{ t('Изменить адрес') }}
+                    </button>
+                    <button class="admin-danger-button" type="button" [disabled]="busy() !== ''" (click)="cancelOrder(order)">
+                      {{ t('Отменить заказ') }}
+                    </button>
+                  }
+                </div>
+              }
+            </article>
+          }
+        </div>
+        @if (orderPageCount() > 1) {
+          <nav class="admin-pagination" [attr.aria-label]="t('Пагинация заказов')">
+            <button type="button" [disabled]="orderPage() === 1" (click)="changeOrderPage(-1)">
+              {{ t('Предыдущая') }}
+            </button>
+            <span>{{ t('Страница') }} {{ orderPage() }} {{ t('из') }} {{ orderPageCount() }}</span>
+            <button type="button" [disabled]="orderPage() === orderPageCount()" (click)="changeOrderPage(1)">
+              {{ t('Следующая') }}
+            </button>
+          </nav>
+        }
+        }
+      }
+    </section>
+  }
+</main>
