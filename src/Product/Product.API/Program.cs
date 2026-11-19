@@ -18,14 +18,12 @@ namespace Product.API
         {
             var builder = WebApplication.CreateBuilder(args);
 
-            // API + Razor Pages + swagger
             builder.Services.AddControllers();
             builder.Services.AddRazorPages();
             builder.Services.AddEndpointsApiExplorer();
             builder.Services.AddSwaggerGen();
             builder.Services.AddAuthorization();
 
-            // ����������� ������ Product (DbContext, �����������, �������)
             builder.Services.AddProductApplication();
             builder.Services.AddProductInfrastructure(builder.Configuration);
             builder.Services.AddCors(options => options.AddPolicy("Frontend", policy =>
